@@ -32,10 +32,13 @@ def parse_opts(argv, opt_map):
         if opt not in opt_map:
             print >> sys.stderr, "Invalid option: %s" % opt
             sys.exit(1)
-        arg = opt_map[opt](arg)
-        if opt.startswith('no-'):
-            opt = opt[5:]
-            arg = not arg
+        if opt_map[opt] is not bool:
+            arg = opt_map[opt](arg)
+        elif opt.startswith('no-'):
+            opt = opt[3:]
+            args = False
+        else:
+            args = True
         kwargs[opt.replace('-', '_')] = arg
     return kwargs, args
 
