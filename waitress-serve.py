@@ -12,7 +12,7 @@ RUNNER_PATTERN = re.compile("""
     )
     :
     (?P<object>
-        [a-z_][a-z0-9_]*
+        [a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*
     )
     $
     """, re.I | re.X)
@@ -75,9 +75,11 @@ def main():
     module_name = matches.group('module')
     object_name = matches.group('object')
 
-    module = __import__(module_name, globals(), locals(), [object_name], -1)
-    app = getattr(module, object_name)
-    waitress.serve(app, **kwargs)
+    module = __import__(module_name, globals(), locals(), [], -1)
+    obj = module
+    for name in object_name.split('.'):
+        obj = getattr(obj, name)
+    waitress.serve(obj, **kwargs)
     return 0
 
 
