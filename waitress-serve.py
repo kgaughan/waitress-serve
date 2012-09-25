@@ -12,7 +12,7 @@ RUNNER_PATTERN = re.compile("""
     )
     :
     (?P<object>
-        [a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*
+        [a-z_][a-z0-9_]*
     )
     $
     """, re.I | re.X)
@@ -36,9 +36,9 @@ def parse_opts(argv, opt_map):
             arg = opt_map[opt](arg)
         elif opt.startswith('no-'):
             opt = opt[3:]
-            args = False
+            arg = False
         else:
-            args = True
+            arg = True
         kwargs[opt.replace('-', '_')] = arg
     return kwargs, args
 
@@ -58,10 +58,12 @@ def main():
         'connection-limit': int,
         'cleanup-interval': int,
         'channel-timeout': int,
+        'log-socket-errors': bool,
         'no-log-socket-errors': bool,
         'max-request-header-size': int,
         'max-request-body-size': int,
-        'expose-tracebacks': bool
+        'expose-tracebacks': bool,
+        'no-expose-tracebacks': bool,
     }
     kwargs, args = parse_opts(sys.argv[1:], opt_map)
     if len(args) != 1:
@@ -75,11 +77,9 @@ def main():
     module_name = matches.group('module')
     object_name = matches.group('object')
 
-    module = __import__(module_name, globals(), locals(), [], -1)
-    obj = module
-    for name in object_name.split('.'):
-        obj = getattr(obj, name)
-    waitress.serve(obj, **kwargs)
+    module = __import__(module_name, globals(), locals(), [object_name], -1)
+    app = getattr(module, object_name)
+    waitress.serve(app, **kwargs)
     return 0
 
 
