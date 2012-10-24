@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+
+"""
+Runner for Waitress.
+
+It's really little more than a lightweight wrapper around Waitress's
+`waitress.serve()` function.
+"""
+
 import getopt
 import re
 import sys
@@ -5,7 +14,12 @@ import sys
 import waitress
 
 
-RUNNER_PATTERN = re.compile("""
+__version__ = '0.1.0'
+__author__ = 'Keith Gaughan'
+__email__ = 'k@stereochro.me'
+
+
+RUNNER_PATTERN = re.compile(r"""
     ^
     (?P<module>
         [a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*
