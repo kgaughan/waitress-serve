@@ -33,12 +33,11 @@ RUNNER_PATTERN = re.compile(r"""
 
 
 def parse_opts(argv, opt_map):
-    long_opts = []
+    long_opts = ['help']
     for opt, cast in opt_map.items():
         if cast is bool:
             long_opts.append(opt)
             long_opts.append('no-' + opt)
-            opt_map['no-' + opt] = bool
         else:
             long_opts.append(opt + '=')
     opts, args = getopt.getopt(argv, '', long_opts)
@@ -49,6 +48,8 @@ def parse_opts(argv, opt_map):
             opt, flag = orig_opt[3:], False
         else:
             opt, flag = orig_opt, True
+        if opt == 'help':
+            return {'help': True}, ()
         if opt not in opt_map:
             print >> sys.stderr, "Invalid option: %s" % orig_opt
             sys.exit(1)
@@ -58,6 +59,18 @@ def parse_opts(argv, opt_map):
             arg = flag
         kwargs[opt.replace('-', '_')] = arg
     return kwargs, args
+
+
+def show_help(fh, opt_map):
+    print >> fh, "Usage:"
+    print >> fh, "    waitress-serve OPTS module:object\n"
+    print >> fh, "Options:"
+    print >> fh, "    --help"
+    for opt, cast in sorted(opt_map.items()):
+        if cast is bool:
+            print >> fh, "    --[no-]%s" % opt
+        else:
+            print >> fh, "    --%s=%s" % (opt, cast.__name__)
 
 
 def main():
@@ -81,12 +94,17 @@ def main():
         'expose-tracebacks': bool,
     }
     kwargs, args = parse_opts(sys.argv[1:], opt_map)
+    if 'help' in kwargs:
+        show_help(sys.stdout, opt_map)
+        return 0
     if len(args) != 1:
-        print >> sys.stderr, 'Please specify one and only one application'
+        print >> sys.stderr, 'Please specify one and only one application.'
+        show_help(sys.stderr, opt_map)
         return 1
     matches = RUNNER_PATTERN.match(args[0])
     if not matches:
         print >> sys.stderr, "Malformed application: '%s'" % args[0]
+        show_help(sys.stderr, opt_map)
         return 1
 
     module_name = matches.group('module')
