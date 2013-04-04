@@ -92,6 +92,7 @@ def main():
         'max-request-header-size': int,
         'max-request-body-size': int,
         'expose-tracebacks': bool,
+        'call': bool,
     }
     kwargs, args = parse_opts(sys.argv[1:], opt_map)
     if 'help' in kwargs:
@@ -112,6 +113,9 @@ def main():
 
     module = __import__(module_name, fromlist=[object_name])
     app = getattr(module, object_name)
+    if 'call' in kwargs and kwargs['call']:
+        app = app()
+        del kwargs['call']
     waitress.serve(app, **kwargs)
     return 0
 
